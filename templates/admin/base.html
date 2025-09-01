@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        /* Hide the Django version text */
+        .version {
+            display: none;
+        }
+        /* Style the header to match Neuvii branding */
+        #header {
+            background: #2c3e50;
+            color: white;
+        }
+        #branding h1 a:link, #branding h1 a:visited {
+            color: white;
+        }
+    </style>
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+    <!-- Custom footer content can be added here -->
+{% endblock %}

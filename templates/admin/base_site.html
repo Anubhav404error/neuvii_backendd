@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Neuvii Administration') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Neuvii Administration') }}</a></h1>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+  {% if user.has_usable_password %}
+    <div id="header-restore-password">
+      <a href="{% url 'admin:password_reset' %}">{% translate 'Change password' %}</a>
+    </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
