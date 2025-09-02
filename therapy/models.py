@@ -28,9 +28,30 @@ class TherapistProfile(models.Model):
 class ParentProfile(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     parent_email = models.EmailField(blank=True, null=True)
+    
+    # Child information fields (merged from Child model)
+    child_name = models.CharField(max_length=255, help_text="Child's full name")
+    child_age = models.IntegerField(help_text="Child's age")
+    child_gender = models.CharField(
+        max_length=10, 
+        choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
+        help_text="Child's gender"
+    )
+    child_date_of_birth = models.DateField(blank=True, null=True, help_text="Child's date of birth")
+    fscd_id = models.CharField(max_length=50, blank=True, null=True, help_text="FSCD ID number")
+    
+    # Assignment information
+    assigned_therapist = models.ForeignKey(
+        'TherapistProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_clients',
+        help_text="Therapist assigned to this client"
+    )
+    
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
@@ -40,7 +61,15 @@ class ParentProfile(models.Model):
         verbose_name_plural = 'Clients'
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} (Child: {self.child_name})"
+    
+    def get_child_age_from_dob(self):
+        """Calculate child's age from date of birth"""
+        if self.child_date_of_birth:
+            from datetime import date
+            today = date.today()
+            return today.year - self.child_date_of_birth.year - ((today.month, today.day) < (self.child_date_of_birth.month, self.child_date_of_birth.day))
+        return self.child_age
 
 # Child Model
 class Child(models.Model):
