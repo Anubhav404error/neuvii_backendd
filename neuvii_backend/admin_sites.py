@@ -46,17 +46,16 @@ class NeuviiAdminSite(AdminSite):
                     app['name'] = 'My Clinic Profile'
                     filtered_apps.append(app)
                 elif app['app_label'] == 'therapy':
-                    # Split therapy app into two sections
+                    # Split therapy app into sections
                     client_models = []
                     therapy_models = []
                     
                     for model in app['models']:
-                        if model['object_name'] in ['ParentProfile', 'Child']:
-                            # Update model names for Client Management
-                            if model['object_name'] == 'ParentProfile':
-                                model['name'] = 'Clients'
+                        if model['object_name'] == 'ClientProfile':
+                            model['name'] = 'Clients'
                             client_models.append(model)
-                        elif model['object_name'] in ['TherapistProfile']:
+                        elif model['object_name'] == 'TherapistProfile':
+                            model['name'] = 'Therapists'
                             therapy_models.append(model)
                     
                     # Create Client Management section
@@ -95,14 +94,11 @@ class NeuviiAdminSite(AdminSite):
                     assignment_models = []
                     
                     for model in app['models']:
-                        if model['object_name'] in ['TherapistProfile']:
+                        if model['object_name'] == 'TherapistProfile':
                             model['name'] = 'My Profile'
                             profile_models.append(model)
-                        elif model['object_name'] in ['ParentProfile', 'Child']:
-                            if model['object_name'] == 'ParentProfile':
-                                model['name'] = 'My Clients'
-                            elif model['object_name'] == 'Child':
-                                model['name'] = 'My Children'
+                        elif model['object_name'] == 'ClientProfile':
+                            model['name'] = 'My Clients'
                             assignment_models.append(model)
                     
                     # Create My Profile section
@@ -132,38 +128,23 @@ class NeuviiAdminSite(AdminSite):
             filtered_apps = []
             for app in app_list:
                 if app['app_label'] == 'therapy':
-                    profile_models = []
-                    children_models = []
+                    client_models = []
                     
                     for model in app['models']:
-                        if model['object_name'] in ['ParentProfile']:
-                            model['name'] = 'My Profile'
-                            profile_models.append(model)
-                        elif model['object_name'] in ['Child']:
-                            model['name'] = 'My Children'
-                            children_models.append(model)
+                        if model['object_name'] == 'ClientProfile':
+                            model['name'] = 'My Child Profile'
+                            client_models.append(model)
                     
-                    # Create My Profile section
-                    if profile_models:
-                        profile_app = {
-                            'name': 'My Profile',
-                            'app_label': 'parent_profile',
+                    # Create My Child Profile section
+                    if client_models:
+                        client_app = {
+                            'name': 'My Child Profile',
+                            'app_label': 'parent_client',
                             'app_url': '/admin/therapy/',
                             'has_module_perms': True,
-                            'models': profile_models
+                            'models': client_models
                         }
-                        filtered_apps.append(profile_app)
-                    
-                    # Create My Children section
-                    if children_models:
-                        children_app = {
-                            'name': 'My Children',
-                            'app_label': 'parent_children',
-                            'app_url': '/admin/therapy/',
-                            'has_module_perms': True,
-                            'models': children_models
-                        }
-                        filtered_apps.append(children_app)
+                        filtered_apps.append(client_app)
             return filtered_apps
         
         return []
