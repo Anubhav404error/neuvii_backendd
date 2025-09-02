@@ -98,7 +98,7 @@ class NeuviiAdminSite(AdminSite):
                             model['name'] = 'My Profile'
                             profile_models.append(model)
                         elif model['object_name'] == 'ClientProfile':
-                            model['name'] = 'My Clients'
+                            model['name'] = 'My Assignments'
                             assignment_models.append(model)
                     
                     # Create My Profile section
@@ -132,13 +132,13 @@ class NeuviiAdminSite(AdminSite):
                     
                     for model in app['models']:
                         if model['object_name'] == 'ClientProfile':
-                            model['name'] = 'My Child Profile'
+                            model['name'] = 'My Child'
                             client_models.append(model)
                     
-                    # Create My Child Profile section
+                    # Create My Child section
                     if client_models:
                         client_app = {
-                            'name': 'My Child Profile',
+                            'name': 'My Child',
                             'app_label': 'parent_client',
                             'app_url': '/admin/therapy/',
                             'has_module_perms': True,

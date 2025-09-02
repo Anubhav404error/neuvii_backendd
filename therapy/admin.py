@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TherapistProfile, ParentProfile, Child, ClientProfile, Assignment, Goal, Task
+from .models import TherapistProfile, ClientProfile, Goal, Task, Assignment
 from users.models import Role, User
 from users.utils import create_user_with_role
 from django import forms
@@ -8,11 +8,17 @@ from neuvii_backend.admin_sites import neuvii_admin_site
 class ClientProfileForm(forms.ModelForm):
     class Meta:
         model = ClientProfile
-        fields = '__all__'
+        fields = [
+            'parent_first_name', 'parent_last_name', 'parent_email',
+            'child_first_name', 'child_date_of_birth', 'fscd_id', 'assigned_therapist'
+        ]
         widgets = {
             'child_date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'medical_notes': forms.Textarea(attrs={'rows': 3}),
-            'therapy_goals': forms.Textarea(attrs={'rows': 3}),
+            'parent_first_name': forms.TextInput(attrs={'placeholder': 'Enter first name'}),
+            'parent_last_name': forms.TextInput(attrs={'placeholder': 'Enter last name'}),
+            'parent_email': forms.EmailInput(attrs={'placeholder': 'Enter your email'}),
+            'child_first_name': forms.TextInput(attrs={'placeholder': 'Enter child name'}),
+            'fscd_id': forms.TextInput(attrs={'placeholder': 'FSCD76439'}),
         }
         
     def __init__(self, *args, **kwargs):
@@ -28,19 +34,14 @@ class ClientProfileForm(forms.ModelForm):
                 try:
                     clinic = Clinic.objects.get(clinic_admin=self.request.user)
                     self.fields['assigned_therapist'].queryset = TherapistProfile.objects.filter(clinic=clinic)
-                    self.fields['clinic'].initial = clinic
-                    self.fields['clinic'].widget = forms.HiddenInput()
+                    self.fields['assigned_therapist'].empty_label = "Select Therapist"
                 except Clinic.DoesNotExist:
                     self.fields['assigned_therapist'].queryset = TherapistProfile.objects.none()
             elif self.request.user.role.name.lower() == 'therapist':
-                # Therapist can only assign themselves
                 try:
                     therapist_profile = TherapistProfile.objects.get(email=self.request.user.email)
                     self.fields['assigned_therapist'].queryset = TherapistProfile.objects.filter(id=therapist_profile.id)
                     self.fields['assigned_therapist'].initial = therapist_profile
-                    if therapist_profile.clinic:
-                        self.fields['clinic'].initial = therapist_profile.clinic
-                        self.fields['clinic'].widget = forms.HiddenInput()
                 except TherapistProfile.DoesNotExist:
                     self.fields['assigned_therapist'].queryset = TherapistProfile.objects.none()
 
@@ -48,24 +49,24 @@ class ClientProfileForm(forms.ModelForm):
         cleaned_data = super().clean()
         
         # Auto-assign clinic based on user role
-        if not cleaned_data.get('clinic'):
-            if self.request and hasattr(self.request.user, 'role') and self.request.user.role:
-                if self.request.user.role.name.lower() == 'clinic admin':
-                    from clinic.models import Clinic
-                    try:
-                        clinic = Clinic.objects.get(clinic_admin=self.request.user)
-                        cleaned_data['clinic'] = clinic
-                    except Clinic.DoesNotExist:
-                        raise forms.ValidationError('No clinic is associated with your admin account.')
-                elif self.request.user.role.name.lower() == 'therapist':
-                    try:
-                        therapist_profile = TherapistProfile.objects.get(email=self.request.user.email)
-                        if therapist_profile.clinic:
-                            cleaned_data['clinic'] = therapist_profile.clinic
-                        else:
-                            raise forms.ValidationError('Your therapist profile is not associated with any clinic.')
-                    except TherapistProfile.DoesNotExist:
-                        raise forms.ValidationError('Therapist profile not found.')
+        if self.request and hasattr(self.request.user, 'role') and self.request.user.role:
+            if self.request.user.role.name.lower() == 'clinic admin':
+                from clinic.models import Clinic
+                try:
+                    clinic = Clinic.objects.get(clinic_admin=self.request.user)
+                    # Store clinic for save_model method
+                    self._clinic = clinic
+                except Clinic.DoesNotExist:
+                    raise forms.ValidationError('No clinic is associated with your admin account.')
+            elif self.request.user.role.name.lower() == 'therapist':
+                try:
+                    therapist_profile = TherapistProfile.objects.get(email=self.request.user.email)
+                    if therapist_profile.clinic:
+                        self._clinic = therapist_profile.clinic
+                    else:
+                        raise forms.ValidationError('Your therapist profile is not associated with any clinic.')
+                except TherapistProfile.DoesNotExist:
+                    raise forms.ValidationError('Therapist profile not found.')
         
         return cleaned_data
 
@@ -78,41 +79,28 @@ class ClientProfileAdmin(admin.ModelAdmin):
     ]
     search_fields = [
         'parent_first_name', 'parent_last_name', 'parent_email',
-        'child_first_name', 'child_last_name', 'fscd_id'
+        'child_first_name', 'fscd_id'
     ]
-    list_filter = ['clinic', 'assigned_therapist', 'child_gender', 'is_active', 'date_added']
-    exclude = ['clinic'] if not hasattr(admin, 'site') else []
+    list_filter = ['clinic', 'assigned_therapist', 'is_active', 'date_added']
     
     fieldsets = (
         ('Parent Information', {
             'fields': (
                 ('parent_first_name', 'parent_last_name'),
-                ('parent_email', 'parent_phone'),
+                'parent_email',
             )
         }),
         ('Child Information', {
             'fields': (
-                ('child_first_name', 'child_last_name'),
-                ('child_date_of_birth', 'child_gender'),
+                'child_first_name',
+                'child_date_of_birth',
             )
         }),
         ('Administrative', {
             'fields': (
-                ('fscd_id', 'assigned_therapist'),
+                'fscd_id',
+                'assigned_therapist',
             )
-        }),
-        ('Emergency Contact', {
-            'fields': (
-                ('emergency_contact_name', 'emergency_contact_phone'),
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Therapy Information', {
-            'fields': (
-                'medical_notes',
-                'therapy_goals',
-            ),
-            'classes': ('collapse',)
         }),
         ('Status', {
             'fields': ('is_active',),
@@ -157,23 +145,9 @@ class ClientProfileAdmin(admin.ModelAdmin):
         return qs.none()
 
     def save_model(self, request, obj, form, change):
-        # Auto-assign clinic if not set
-        if not obj.clinic:
-            if hasattr(request.user, 'role') and request.user.role:
-                if request.user.role.name.lower() == 'clinic admin':
-                    from clinic.models import Clinic
-                    try:
-                        clinic = Clinic.objects.get(clinic_admin=request.user)
-                        obj.clinic = clinic
-                    except Clinic.DoesNotExist:
-                        pass
-                elif request.user.role.name.lower() == 'therapist':
-                    try:
-                        therapist_profile = TherapistProfile.objects.get(email=request.user.email)
-                        if therapist_profile.clinic:
-                            obj.clinic = therapist_profile.clinic
-                    except TherapistProfile.DoesNotExist:
-                        pass
+        # Auto-assign clinic from form
+        if hasattr(form, '_clinic'):
+            obj.clinic = form._clinic
         
         # Save the client profile
         super().save_model(request, obj, form, change)
@@ -202,7 +176,7 @@ class TherapistProfileAdmin(admin.ModelAdmin):
     list_display = ['id', 'first_name', 'last_name', 'email', 'phone_number', 'clinic', 'is_active', 'date_added']
     search_fields = ['first_name', 'last_name', 'email', 'phone_number']
     list_filter = ['clinic', 'is_active', 'date_added']
-    exclude = ['clinic']  # Hide clinic field from form
+    exclude = ['clinic']
     readonly_fields = ['date_added']
     
     fieldsets = (
@@ -265,50 +239,9 @@ class TherapistProfileAdmin(admin.ModelAdmin):
             )
 
 
-# Legacy admin classes (hidden from main interface but kept for data migration)
-class ParentProfileForm(forms.ModelForm):
-    class Meta:
-        model = ParentProfile
-        fields = '__all__'
-        
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
-        super().__init__(*args, **kwargs)
-        
-        # Handle clinic field based on user role
-        if self.request and hasattr(self.request.user, 'role') and self.request.user.role:
-            if self.request.user.role.name.lower() == 'clinic admin':
-                from clinic.models import Clinic
-                try:
-                    clinic = Clinic.objects.get(clinic_admin=self.request.user)
-                    self.fields['clinic'].initial = clinic
-                    self.fields['clinic'].widget = forms.HiddenInput()
-                except Clinic.DoesNotExist:
-                    pass
-
-class ParentProfileAdmin(admin.ModelAdmin):
-    form = ParentProfileForm
-    list_display = ['id', 'first_name', 'last_name', 'phone_number', 'parent_email', 'clinic', 'date_added', 'is_active']
-    search_fields = ['first_name', 'last_name', 'phone_number', 'parent_email', 'clinic__name']
-    list_filter = ['clinic', 'is_active', 'date_added']
-
-class ChildForm(forms.ModelForm):
-    class Meta:
-        model = Child
-        fields = ['name', 'age', 'gender', 'parent', 'assigned_therapist']
-
-class ChildAdmin(admin.ModelAdmin):
-    form = ChildForm
-    list_display = ['id', 'name', 'age', 'gender', 'clinic', 'parent', 'assigned_therapist', 'created_at']
-    search_fields = ['name', 'parent__first_name', 'parent__last_name']
-    list_filter = ['clinic', 'gender', 'created_at']
-
-
-# Register new models with custom admin site
+# Register only the new unified models with custom admin site
 neuvii_admin_site.register(ClientProfile, ClientProfileAdmin)
 neuvii_admin_site.register(TherapistProfile, TherapistProfileAdmin)
 
-# Keep legacy models registered but hidden (for data migration purposes)
-# These won't show in the main interface due to admin_sites.py filtering
-admin.site.register(ParentProfile, ParentProfileAdmin)
-admin.site.register(Child, ChildAdmin)
+# Note: Child and ParentProfile models are no longer registered with the admin site
+# They exist only for data migration purposes and are hidden from the interface
