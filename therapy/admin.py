@@ -9,15 +9,14 @@ class ClientProfileForm(forms.ModelForm):
     class Meta:
         model = ClientProfile
         fields = [
-            'parent_first_name', 'parent_last_name', 'parent_email',
-            'child_first_name', 'child_date_of_birth', 'fscd_id', 'assigned_therapist'
+            'child_first_name', 'child_last_name', 'parent_email',
+            'child_date_of_birth', 'fscd_id', 'assigned_therapist'
         ]
         widgets = {
             'child_date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'parent_first_name': forms.TextInput(attrs={'placeholder': 'Enter first name'}),
-            'parent_last_name': forms.TextInput(attrs={'placeholder': 'Enter last name'}),
+            'child_first_name': forms.TextInput(attrs={'placeholder': 'Enter first name'}),
+            'child_last_name': forms.TextInput(attrs={'placeholder': 'Enter last name'}),
             'parent_email': forms.EmailInput(attrs={'placeholder': 'Enter your email'}),
-            'child_first_name': forms.TextInput(attrs={'placeholder': 'Enter child name'}),
             'fscd_id': forms.TextInput(attrs={'placeholder': 'FSCD76439'}),
         }
         
@@ -74,26 +73,24 @@ class ClientProfileForm(forms.ModelForm):
 class ClientProfileAdmin(admin.ModelAdmin):
     form = ClientProfileForm
     list_display = [
-        'id', 'parent_full_name', 'child_full_name', 'child_age', 
+        'id', 'child_full_name', 'child_age', 'parent_email',
         'assigned_therapist', 'clinic', 'fscd_id', 'is_active', 'date_added'
     ]
     search_fields = [
-        'parent_first_name', 'parent_last_name', 'parent_email',
-        'child_first_name', 'fscd_id'
+        'child_first_name', 'child_last_name', 'parent_email', 'fscd_id'
     ]
     list_filter = ['clinic', 'assigned_therapist', 'is_active', 'date_added']
     
     fieldsets = (
-        ('Parent Information', {
-            'fields': (
-                ('parent_first_name', 'parent_last_name'),
-                'parent_email',
-            )
-        }),
         ('Child Information', {
             'fields': (
-                'child_first_name',
+                ('child_first_name', 'child_last_name'),
                 'child_date_of_birth',
+            )
+        }),
+        ('Parent Information', {
+            'fields': (
+                'parent_email',
             )
         }),
         ('Administrative', {
@@ -152,12 +149,13 @@ class ClientProfileAdmin(admin.ModelAdmin):
         # Save the client profile
         super().save_model(request, obj, form, change)
         
-        # Auto-create parent user if email and name are provided
-        if obj.parent_first_name and obj.parent_email and not change:  # Only for new clients
+        # Auto-create parent user if email is provided and it's a new client
+        if obj.parent_email and not change:
+            # Extract parent name from child's name for user creation
             parent_user = create_user_with_role(
                 email=obj.parent_email,
-                first_name=obj.parent_first_name,
-                last_name=obj.parent_last_name or "",
+                first_name=obj.child_first_name,  # Use child's first name as placeholder
+                last_name=obj.child_last_name,   # Use child's last name as placeholder
                 role_name='parent',
                 request=request
             )

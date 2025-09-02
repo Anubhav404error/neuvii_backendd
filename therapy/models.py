@@ -24,19 +24,18 @@ class TherapistProfile(models.Model):
 
 # Unified Client Profile (matches form fields exactly)
 class ClientProfile(models.Model):
-    # Parent Information (from form)
-    parent_first_name = models.CharField(max_length=255, verbose_name="First Name")
-    parent_last_name = models.CharField(max_length=255, verbose_name="Last Name")
-    parent_email = models.EmailField(verbose_name="Parent Email ID")
-    
-    # Child Information (from form)
-    child_first_name = models.CharField(max_length=255, verbose_name="Child Name")
+    # Child Information (First Name and Last Name from form are for the child)
+    child_first_name = models.CharField(max_length=255, verbose_name="First Name")
+    child_last_name = models.CharField(max_length=255, verbose_name="Last Name")
     child_date_of_birth = models.DateField(verbose_name="Date of Birth")
     
-    # Administrative Information (from form)
+    # Parent Information
+    parent_email = models.EmailField(verbose_name="Parent Email ID")
+    
+    # Administrative Information
     fscd_id = models.CharField(max_length=50, verbose_name="FSCD ID")
     
-    # Assignment Information (from form)
+    # Assignment Information
     assigned_therapist = models.ForeignKey(
         TherapistProfile,
         on_delete=models.SET_NULL,
@@ -46,7 +45,7 @@ class ClientProfile(models.Model):
         verbose_name="Assign Therapist"
     )
     
-    # System fields
+    # System fields (not shown in form but required for system functionality)
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     date_added = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -54,18 +53,14 @@ class ClientProfile(models.Model):
     class Meta:
         verbose_name = 'Client'
         verbose_name_plural = 'Clients'
-        ordering = ['parent_last_name', 'parent_first_name', 'child_first_name']
+        ordering = ['child_last_name', 'child_first_name']
 
     def __str__(self):
-        return f"{self.parent_first_name} {self.parent_last_name} (Child: {self.child_first_name})"
+        return f"{self.child_first_name} {self.child_last_name}"
     
     @property
     def child_full_name(self):
-        return self.child_first_name
-    
-    @property
-    def parent_full_name(self):
-        return f"{self.parent_first_name} {self.parent_last_name}"
+        return f"{self.child_first_name} {self.child_last_name}"
     
     @property
     def child_age(self):
@@ -140,33 +135,15 @@ class ParentProfile(models.Model):
     last_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     parent_email = models.EmailField(blank=True, null=True)
-    child_name = models.CharField(max_length=255, help_text="Child's full name")
-    child_age = models.IntegerField(help_text="Child's age")
-    child_gender = models.CharField(
-        max_length=10, 
-        choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')],
-        help_text="Child's gender"
-    )
-    child_date_of_birth = models.DateField(blank=True, null=True, help_text="Child's date of birth")
-    fscd_id = models.CharField(max_length=50, blank=True, null=True, help_text="FSCD ID number")
-    assigned_therapist = models.ForeignKey(
-        'TherapistProfile',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='assigned_clients_legacy',
-        help_text="Therapist assigned to this client"
-    )
-    clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, null=True, blank=True)
-    date_added = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    date_added = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Client (Legacy)'
         verbose_name_plural = 'Clients (Legacy)'
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} (Child: {self.child_name})"
+        return f"{self.first_name} {self.last_name}"
 
 class Child(models.Model):
     """DEPRECATED: Use ClientProfile instead - kept for data migration"""
