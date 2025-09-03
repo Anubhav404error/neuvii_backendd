@@ -32,6 +32,7 @@ admin.site.index_title = 'Site Administration'
 urlpatterns = [
     path("admin/", neuvii_admin_site.urls),
     path("auth/", include('users.urls')),
+    path("therapy/", include('therapy.urls')),
     path('', redirect_to_login),
 ]
 

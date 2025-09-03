@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Speech Practice Plan - Neuvii</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background-color: #2c8aa6;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .wizard-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .wizard-header {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .wizard-title {
+            color: #2c8aa6;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .client-info {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .steps-container {
+            display: flex;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .step {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            border-right: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .step:last-child {
+            border-right: none;
+        }
+
+        .step.active {
+            background-color: #2c8aa6;
+            color: white;
+        }
+
+        .step.completed {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 600;
+        }
+
+        .step.active .step-number,
+        .step.completed .step-number {
+            background-color: white;
+            color: #2c8aa6;
+        }
+
+        .step.completed .step-number {
+            color: #28a745;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .step-content {
+            padding: 2rem;
+            min-height: 400px;
+        }
+
+        .step-panel {
+            display: none;
+        }
+
+        .step-panel.active {
+            display: block;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .option-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option-card:hover {
+            border-color: #2c8aa6;
+            box-shadow: 0 4px 12px rgba(44, 138, 166, 0.1);
+        }
+
+        .option-card.selected {
+            border-color: #2c8aa6;
+            background-color: #f0f8ff;
+        }
+
+        .option-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .option-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .task-card {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .task-card:hover {
+            border-color: #2c8aa6;
+            box-shadow: 0 4px 12px rgba(44, 138, 166, 0.1);
+        }
+
+        .task-card.selected {
+            border-color: #2c8aa6;
+            background-color: #f0f8ff;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-difficulty {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .difficulty-beginner {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .difficulty-intermediate {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .difficulty-advanced {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            border-top: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-primary {
+            background-color: #2c8aa6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #236b85;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .child-selector {
+            margin-bottom: 2rem;
+        }
+
+        .child-selector label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .child-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .selected-count {
+            background-color: #2c8aa6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .step-description {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 Neuvii</h1>
+        <div class="notification-icon">🔔</div>
+    </div>
+
+    <div class="container">
+        <div class="wizard-container">
+            <div class="wizard-header">
+                <h1 class="wizard-title">Assign Speech Practice Plan</h1>
+                <p class="client-info">Client: {{ parent.first_name }} {{ parent.last_name }}</p>
+            </div>
+
+            <div class="steps-container">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Speech Area</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Long-Term Goal</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Short-Term Goal</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Assign Tasks</div>
+                </div>
+            </div>
+
+            <div class="step-content">
+                <!-- Step 1: Speech Area -->
+                <div class="step-panel active" id="step-1">
+                    <div class="child-selector">
+                        <label for="child-select">Select Child:</label>
+                        <select id="child-select" required>
+                            <option value="">Choose a child...</option>
+                            {% for child in children %}
+                                <option value="{{ child.id }}">{{ child.name }} (Age: {{ child.age }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <p class="step-description">Select the speech area you want to focus on for this client.</p>
+                    <div class="options-grid" id="speech-areas">
+                        {% for area in speech_areas %}
+                            <div class="option-card" data-id="{{ area.id }}">
+                                <div class="option-title">{{ area.name }}</div>
+                                {% if area.description %}
+                                    <div class="option-description">{{ area.description }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Step 2: Long-Term Goal -->
+                <div class="step-panel" id="step-2">
+                    <p class="step-description">Choose the long-term goal that aligns with your therapy objectives.</p>
+                    <div class="loading" id="long-term-loading">Please select a speech area first...</div>
+                    <div class="options-grid" id="long-term-goals" style="display: none;"></div>
+                </div>
+
+                <!-- Step 3: Short-Term Goal -->
+                <div class="step-panel" id="step-3">
+                    <p class="step-description">Select the specific short-term goals to work towards.</p>
+                    <div class="loading" id="short-term-loading">Please select a long-term goal first...</div>
+                    <div class="options-grid" id="short-term-goals" style="display: none;"></div>
+                </div>
+
+                <!-- Step 4: Assign Tasks -->
+                <div class="step-panel" id="step-4">
+                    <p class="step-description">Choose the specific tasks to assign to the client. You can select multiple tasks.</p>
+                    <div class="loading" id="tasks-loading">Please select a short-term goal first...</div>
+                    <div class="task-grid" id="tasks-list" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <a href="/admin/therapy/parentprofile/" class="btn btn-secondary" id="back-btn">← Back</a>
+                <div>
+                    <span class="selected-count" id="selected-count" style="display: none;">0 tasks selected</span>
+                </div>
+                <button class="btn btn-primary" id="next-btn" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedData = {
+            child_id: null,
+            speech_area_id: null,
+            long_term_goal_id: null,
+            short_term_goal_id: null,
+            selected_tasks: []
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStepDisplay();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Child selection
+            document.getElementById('child-select').addEventListener('change', function() {
+                selectedData.child_id = this.value;
+                updateNextButton();
+            });
+
+            // Speech area selection
+            document.getElementById('speech-areas').addEventListener('click', function(e) {
+                const card = e.target.closest('.option-card');
+                if (card) {
+                    selectOption('speech-areas', card);
+                    selectedData.speech_area_id = card.dataset.id;
+                    updateNextButton();
+                }
+            });
+
+            // Long-term goal selection
+            document.getElementById('long-term-goals').addEventListener('click', function(e) {
+                const card = e.target.closest('.option-card');
+                if (card) {
+                    selectOption('long-term-goals', card);
+                    selectedData.long_term_goal_id = card.dataset.id;
+                    updateNextButton();
+                }
+            });
+
+            // Short-term goal selection
+            document.getElementById('short-term-goals').addEventListener('click', function(e) {
+                const card = e.target.closest('.option-card');
+                if (card) {
+                    selectOption('short-term-goals', card);
+                    selectedData.short_term_goal_id = card.dataset.id;
+                    updateNextButton();
+                    loadTasks();
+                }
+            });
+
+            // Task selection (multiple)
+            document.getElementById('tasks-list').addEventListener('click', function(e) {
+                const card = e.target.closest('.task-card');
+                if (card) {
+                    toggleTaskSelection(card);
+                    updateSelectedTasksCount();
+                    updateNextButton();
+                }
+            });
+
+            // Navigation
+            document.getElementById('next-btn').addEventListener('click', function() {
+                if (currentStep < 4) {
+                    nextStep();
+                } else {
+                    assignTasks();
+                }
+            });
+
+            document.getElementById('back-btn').addEventListener('click', function(e) {
+                if (currentStep > 1) {
+                    e.preventDefault();
+                    previousStep();
+                }
+            });
+        }
+
+        function selectOption(containerId, selectedCard) {
+            const container = document.getElementById(containerId);
+            container.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            selectedCard.classList.add('selected');
+        }
+
+        function toggleTaskSelection(taskCard) {
+            const taskId = taskCard.dataset.id;
+            if (taskCard.classList.contains('selected')) {
+                taskCard.classList.remove('selected');
+                selectedData.selected_tasks = selectedData.selected_tasks.filter(id => id !== taskId);
+            } else {
+                taskCard.classList.add('selected');
+                selectedData.selected_tasks.push(taskId);
+            }
+        }
+
+        function updateSelectedTasksCount() {
+            const count = selectedData.selected_tasks.length;
+            const countElement = document.getElementById('selected-count');
+            if (count > 0) {
+                countElement.textContent = `${count} task${count > 1 ? 's' : ''} selected`;
+                countElement.style.display = 'inline-block';
+            } else {
+                countElement.style.display = 'none';
+            }
+        }
+
+        function nextStep() {
+            if (currentStep === 1 && selectedData.speech_area_id) {
+                loadLongTermGoals();
+            } else if (currentStep === 2 && selectedData.long_term_goal_id) {
+                loadShortTermGoals();
+            }
+            
+            currentStep++;
+            updateStepDisplay();
+            updateNextButton();
+        }
+
+        function previousStep() {
+            currentStep--;
+            updateStepDisplay();
+            updateNextButton();
+        }
+
+        function updateStepDisplay() {
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+
+            // Update step panels
+            document.querySelectorAll('.step-panel').forEach((panel, index) => {
+                panel.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    panel.classList.add('active');
+                }
+            });
+
+            // Update back button
+            const backBtn = document.getElementById('back-btn');
+            if (currentStep === 1) {
+                backBtn.href = '/admin/therapy/parentprofile/';
+                backBtn.textContent = '← Back to Clients';
+            } else {
+                backBtn.href = '#';
+                backBtn.textContent = '← Back';
+            }
+
+            // Update next button text
+            const nextBtn = document.getElementById('next-btn');
+            if (currentStep === 4) {
+                nextBtn.textContent = 'Assign Tasks';
+            } else {
+                nextBtn.textContent = 'Next →';
+            }
+        }
+
+        function updateNextButton() {
+            const nextBtn = document.getElementById('next-btn');
+            let canProceed = false;
+
+            switch (currentStep) {
+                case 1:
+                    canProceed = selectedData.child_id && selectedData.speech_area_id;
+                    break;
+                case 2:
+                    canProceed = selectedData.long_term_goal_id;
+                    break;
+                case 3:
+                    canProceed = selectedData.short_term_goal_id;
+                    break;
+                case 4:
+                    canProceed = selectedData.selected_tasks.length > 0;
+                    break;
+            }
+
+            nextBtn.disabled = !canProceed;
+        }
+
+        async function loadLongTermGoals() {
+            const container = document.getElementById('long-term-goals');
+            const loading = document.getElementById('long-term-loading');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/therapy/api/long-term-goals/?speech_area_id=${selectedData.speech_area_id}`);
+                const data = await response.json();
+                
+                container.innerHTML = '';
+                data.goals.forEach(goal => {
+                    const card = document.createElement('div');
+                    card.className = 'option-card';
+                    card.dataset.id = goal.id;
+                    card.innerHTML = `
+                        <div class="option-title">${goal.title}</div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+            } catch (error) {
+                console.error('Error loading long-term goals:', error);
+                loading.textContent = 'Error loading goals. Please try again.';
+            }
+        }
+
+        async function loadShortTermGoals() {
+            const container = document.getElementById('short-term-goals');
+            const loading = document.getElementById('short-term-loading');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/therapy/api/short-term-goals/?long_term_goal_id=${selectedData.long_term_goal_id}`);
+                const data = await response.json();
+                
+                container.innerHTML = '';
+                data.goals.forEach(goal => {
+                    const card = document.createElement('div');
+                    card.className = 'option-card';
+                    card.dataset.id = goal.id;
+                    card.innerHTML = `
+                        <div class="option-title">${goal.title}</div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+            } catch (error) {
+                console.error('Error loading short-term goals:', error);
+                loading.textContent = 'Error loading goals. Please try again.';
+            }
+        }
+
+        async function loadTasks() {
+            const container = document.getElementById('tasks-list');
+            const loading = document.getElementById('tasks-loading');
+            
+            loading.style.display = 'block';
+            container.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/therapy/api/tasks/?short_term_goal_id=${selectedData.short_term_goal_id}`);
+                const data = await response.json();
+                
+                container.innerHTML = '';
+                data.tasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = 'task-card';
+                    card.dataset.id = task.id;
+                    card.innerHTML = `
+                        <div class="task-title">${task.title}</div>
+                        ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                        <div class="task-difficulty difficulty-${task.difficulty}">${task.difficulty}</div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+                loading.style.display = 'none';
+                container.style.display = 'grid';
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                loading.textContent = 'Error loading tasks. Please try again.';
+            }
+        }
+
+        async function assignTasks() {
+            if (selectedData.selected_tasks.length === 0) {
+                alert('Please select at least one task to assign.');
+                return;
+            }
+
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = true;
+            nextBtn.textContent = 'Assigning...';
+
+            try {
+                const response = await fetch('/therapy/api/assign-tasks/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        parent_id: {{ parent.id }},
+                        child_id: selectedData.child_id,
+                        selected_tasks: selectedData.selected_tasks
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Error: ' + data.error);
+                    nextBtn.disabled = false;
+                    nextBtn.textContent = 'Assign Tasks';
+                }
+            } catch (error) {
+                console.error('Error assigning tasks:', error);
+                alert('An error occurred while assigning tasks. Please try again.');
+                nextBtn.disabled = false;
+                nextBtn.textContent = 'Assign Tasks';
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

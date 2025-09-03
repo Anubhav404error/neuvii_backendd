@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 
 from neuvii_backend.admin_sites import neuvii_admin_site
-from .models import TherapistProfile, ParentProfile, Child, Assignment
+from .models import TherapistProfile, ParentProfile, Child, Assignment, SpeechArea, LongTermGoal, ShortTermGoal, Task
 from users.models import Role
 from users.utils import create_user_with_role
 
@@ -20,6 +20,46 @@ User = get_user_model()
 # ==========
 def _role_name(user):
     return getattr(getattr(user, "role", None), "name", "").lower()
+
+
+# ===========================
+# Speech Area Admin
+# ===========================
+@admin.register(SpeechArea, site=neuvii_admin_site)
+class SpeechAreaAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'is_active']
+    search_fields = ['name']
+    list_filter = ['is_active']
+
+
+# ===========================
+# Long-Term Goal Admin
+# ===========================
+@admin.register(LongTermGoal, site=neuvii_admin_site)
+class LongTermGoalAdmin(admin.ModelAdmin):
+    list_display = ['id', 'speech_area', 'title', 'is_active']
+    search_fields = ['title']
+    list_filter = ['speech_area', 'is_active']
+
+
+# ===========================
+# Short-Term Goal Admin
+# ===========================
+@admin.register(ShortTermGoal, site=neuvii_admin_site)
+class ShortTermGoalAdmin(admin.ModelAdmin):
+    list_display = ['id', 'long_term_goal', 'title', 'is_active']
+    search_fields = ['title']
+    list_filter = ['long_term_goal__speech_area', 'is_active']
+
+
+# ===========================
+# Task Admin
+# ===========================
+@admin.register(Task, site=neuvii_admin_site)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ['id', 'short_term_goal', 'title', 'difficulty', 'is_active']
+    search_fields = ['title']
+    list_filter = ['difficulty', 'is_active', 'short_term_goal__long_term_goal__speech_area']
 
 
 # ===========================
@@ -142,12 +182,8 @@ class ParentProfileAdmin(admin.ModelAdmin):
 
     # “Add Tasks” button on the changelist (rightmost column)
     def add_tasks_button(self, obj):
-        url = (
-            reverse("neuvii_admin:therapy_assignment_add")
-            + "?"
-            + urlencode({"parent_id": obj.pk})
-        )
-        return format_html('<a class="button" href="{}" style="float:right;">Add Tasks</a>', url)
+        url = reverse("assign_task_wizard") + "?" + urlencode({"parent_id": obj.pk})
+        return format_html('<a class="button" href="{}" style="float:right; background-color: #2c8aa6; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none;">Assign Task</a>', url)
     add_tasks_button.short_description = "Add Tasks"
     add_tasks_button.allow_tags = True
 

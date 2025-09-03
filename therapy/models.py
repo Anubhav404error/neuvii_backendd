@@ -5,6 +5,16 @@ from django.dispatch import receiver
 from clinic.models import Clinic
 
 
+# Speech Area Model
+class SpeechArea(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.name
+
+
 # Therapist Profile
 class TherapistProfile(models.Model):
     first_name = models.CharField(max_length=100)
@@ -22,6 +32,44 @@ class TherapistProfile(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+# Long-Term Goal Model
+class LongTermGoal(models.Model):
+    speech_area = models.ForeignKey(SpeechArea, on_delete=models.CASCADE, related_name='long_term_goals')
+    title = models.CharField(max_length=500)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.speech_area.name}: {self.title}"
+
+
+# Short-Term Goal Model  
+class ShortTermGoal(models.Model):
+    long_term_goal = models.ForeignKey(LongTermGoal, on_delete=models.CASCADE, related_name='short_term_goals')
+    title = models.CharField(max_length=500)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.long_term_goal.speech_area.name}: {self.title}"
+
+
+# Task Model (updated)
+class Task(models.Model):
+    short_term_goal = models.ForeignKey(ShortTermGoal, on_delete=models.CASCADE, related_name='tasks')
+    title = models.CharField(max_length=500)
+    description = models.TextField(blank=True, null=True)
+    difficulty = models.CharField(
+        max_length=20,
+        choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')],
+        default='beginner'
+    )
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.short_term_goal.long_term_goal.speech_area.name}: {self.title}"
 
 
 # Parent Profile (Client)
@@ -91,21 +139,6 @@ class Child(models.Model):
         return f"{self.name} ({clinic_name})"
 
 
-class Goal(models.Model):
-    child = models.ForeignKey(Child, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    is_long_term = models.BooleanField(default=False)
-
-
-class Task(models.Model):
-    goal = models.ForeignKey(Goal, on_delete=models.CASCADE)
-    title = models.TextField()
-    difficulty = models.CharField(
-        max_length=20,
-        choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')]
-    )
-
-
 class Assignment(models.Model):
     child = models.ForeignKey("Child", on_delete=models.CASCADE, related_name="assignments")
     therapist = models.ForeignKey(TherapistProfile, on_delete=models.CASCADE, related_name='assignments')
@@ -113,6 +146,7 @@ class Assignment(models.Model):
     assigned_date = models.DateTimeField(auto_now_add=True)
     due_date = models.DateField(null=True, blank=True)
     completed = models.BooleanField(default=False)
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.task.title} assigned to {self.child.name} by {self.therapist.first_name}"
