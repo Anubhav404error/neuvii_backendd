@@ -365,16 +365,6 @@
             <div class="step-content">
                 <!-- Step 1: Speech Area -->
                 <div class="step-panel active" id="step-1">
-                    <div class="child-selector">
-                        <label for="child-select">Select Child:</label>
-                        <select id="child-select" required>
-                            <option value="">Choose a child...</option>
-                            {% for child in children %}
-                                <option value="{{ child.id }}">{{ child.name }} (Age: {{ child.age }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
                     <p class="step-description">Select the speech area you want to focus on for this client.</p>
                     <div class="options-grid" id="speech-areas">
                         {% for area in speech_areas %}
@@ -405,6 +395,17 @@
                 <!-- Step 4: Assign Tasks -->
                 <div class="step-panel" id="step-4">
                     <p class="step-description">Choose the specific tasks to assign to the client. You can select multiple tasks.</p>
+                    
+                    <div class="child-selector">
+                        <label for="child-select">Select Child:</label>
+                        <select id="child-select" required>
+                            <option value="">Choose a child...</option>
+                            {% for child in children %}
+                                <option value="{{ child.id }}">{{ child.name }} (Age: {{ child.age }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
                     <div class="loading" id="tasks-loading">Please select a short-term goal first...</div>
                     <div class="task-grid" id="tasks-list" style="display: none;"></div>
                 </div>
@@ -595,7 +596,7 @@
 
             switch (currentStep) {
                 case 1:
-                    canProceed = selectedData.child_id && selectedData.speech_area_id;
+                    canProceed = selectedData.speech_area_id;
                     break;
                 case 2:
                     canProceed = selectedData.long_term_goal_id;
@@ -604,7 +605,7 @@
                     canProceed = selectedData.short_term_goal_id;
                     break;
                 case 4:
-                    canProceed = selectedData.selected_tasks.length > 0;
+                    canProceed = selectedData.child_id && selectedData.selected_tasks.length > 0;
                     break;
             }
 
@@ -731,7 +732,7 @@
                 
                 if (data.success) {
                     alert(data.message);
-                    window.location.href = data.redirect_url;
+                    showSuccessModal(data.child_name);
                 } else {
                     alert('Error: ' + data.error);
                     nextBtn.disabled = false;
@@ -758,6 +759,57 @@
                 }
             }
             return cookieValue;
+        }
+
+        function showSuccessModal(childName) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: 20px;
+                padding: 3rem;
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            `;
+
+            modal.innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <div style="width: 80px; height: 80px; background-color: #e0f2f1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2c8aa6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                    </div>
+                </div>
+                <h2 style="color: #2c8aa6; font-size: 1.8rem; margin-bottom: 1rem; font-weight: 600;">Hi, ${document.querySelector('.client-info').textContent.split(': ')[1]}</h2>
+                <p style="color: #333; font-size: 1.1rem; margin-bottom: 2rem;">Done! Tasks have been assigned to ${childName}.</p>
+                <button onclick="closeModal()" style="background-color: #2c8aa6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">Continue</button>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Close modal function
+            window.closeModal = function() {
+                document.body.removeChild(overlay);
+                window.location.href = '/admin/therapy/parentprofile/';
+            };
         }
     </script>
 </body>

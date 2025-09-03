@@ -23,6 +23,13 @@ def create_user_with_role(email, first_name, last_name, role_name, request=None,
         User: Created user object or existing user if email already exists
     """
     
+    # Clean email input
+    email = email.strip() if email else ""
+    if not email:
+        if request:
+            messages.error(request, 'Email address is required to create user account.')
+        return None
+    
     # Check if user already exists
     if User.objects.filter(email=email).exists():
         existing_user = User.objects.get(email=email)
@@ -36,7 +43,9 @@ def create_user_with_role(email, first_name, last_name, role_name, request=None,
                 # Update permissions for the new role
                 assign_role_permissions(existing_user, role_name)
         except Role.DoesNotExist:
-            pass
+            if request:
+                messages.error(request, f'Role "{role_name}" does not exist. Please create this role first.')
+            return None
         
         if send_credentials:
             # Generate new temporary password for existing user
@@ -52,6 +61,8 @@ def create_user_with_role(email, first_name, last_name, role_name, request=None,
                     request, 
                     f'User {existing_user.get_full_name()} already exists. New login credentials sent to {email}.'
                 )
+            else:
+                print(f'New login credentials sent to existing user: {email}')
         else:
             if request:
                 messages.warning(
@@ -70,6 +81,8 @@ def create_user_with_role(email, first_name, last_name, role_name, request=None,
                 request,
                 f'Role "{role_name}" does not exist. Please create this role first.'
             )
+        else:
+            print(f'Error: Role "{role_name}" does not exist.')
         return None
     
     # Create new user with staff permissions for admin access
@@ -98,6 +111,8 @@ def create_user_with_role(email, first_name, last_name, role_name, request=None,
             request,
             f'User {user.get_full_name()} ({email}) created successfully as {role_name}. Welcome email sent with temporary password.'
         )
+    else:
+        print(f'User {user.get_full_name()} ({email}) created successfully as {role_name}. Welcome email sent.')
     
     return user
 
@@ -189,6 +204,8 @@ def assign_role_permissions(user, role_name):
 
 def send_welcome_email(user, temp_password, role_name):
     """Send welcome email with temporary password"""
+    print(f"Attempting to send welcome email to: {user.email}")
+    
     subject = f'Welcome to Neuvii - Your {role_name.title()} Account'
     
     # Create password reset link
@@ -224,8 +241,12 @@ Neuvii Team
             [user.email],
             fail_silently=False,
         )
+        print(f"Welcome email sent successfully to: {user.email}")
     except Exception as e:
         print(f"Failed to send email to {user.email}: {e}")
+        # Try to log more details about the error
+        import traceback
+        print(f"Full error traceback: {traceback.format_exc()}")
 
 
 def parse_contact_person_name(contact_person_name):

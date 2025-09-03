@@ -119,6 +119,7 @@ def assign_tasks(request):
         
         # Create assignments
         assignments_created = 0
+        child_name = child.name
         for task_id in selected_tasks:
             task = get_object_or_404(Task, id=task_id)
             
@@ -133,7 +134,8 @@ def assign_tasks(request):
         
         return JsonResponse({
             'success': True, 
-            'message': f'{assignments_created} tasks assigned successfully',
+            'message': f'{assignments_created} tasks assigned successfully to {child_name}',
+            'child_name': child_name,
             'redirect_url': '/admin/therapy/parentprofile/'
         })
         

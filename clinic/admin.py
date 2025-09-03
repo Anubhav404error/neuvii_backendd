@@ -97,7 +97,8 @@ class ClinicAdmin(admin.ModelAdmin):
                     first_name=first_name,
                     last_name=last_name,
                     role_name='clinic admin',
-                    request=request
+                    request=request,
+                    send_credentials=True
                 )
                 
                 if clinic_admin_user:

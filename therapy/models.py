@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from clinic.models import Clinic
 
@@ -165,6 +166,34 @@ def delete_therapist_user(sender, instance, **kwargs):
             pass
 
 
+# Signal to create user when ParentProfile is created
+@receiver(post_save, sender=ParentProfile)
+def create_parent_user(sender, instance, created, **kwargs):
+    """Create user account when ParentProfile is created"""
+    if created and instance.parent_email and instance.first_name:
+        from users.utils import create_user_with_role
+        create_user_with_role(
+            email=instance.parent_email,
+            first_name=instance.first_name,
+            last_name=instance.last_name or "",
+            role_name="parent",
+            send_credentials=True
+        )
+
+
+# Signal to create user when TherapistProfile is created
+@receiver(post_save, sender=TherapistProfile)
+def create_therapist_user(sender, instance, created, **kwargs):
+    """Create user account when TherapistProfile is created"""
+    if created and instance.email and instance.first_name:
+        from users.utils import create_user_with_role
+        create_user_with_role(
+            email=instance.email,
+            first_name=instance.first_name,
+            last_name=instance.last_name or "",
+            role_name="therapist",
+            send_credentials=True
+        )
 @receiver(post_delete, sender=ParentProfile)
 def delete_parent_user(sender, instance, **kwargs):
     if instance.parent_email:

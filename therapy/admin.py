@@ -129,15 +129,7 @@ class TherapistProfileAdmin(admin.ModelAdmin):
                 pass
         super().save_model(request, obj, form, change)
 
-        # Create linked user on first save
-        if obj.first_name and obj.email and not change:
-            create_user_with_role(
-                email=obj.email,
-                first_name=obj.first_name,
-                last_name=obj.last_name or "",
-                role_name="therapist",
-                request=request,
-            )
+        # Note: User creation is now handled by signal in models.py
 
 
 # ===========================
@@ -250,24 +242,7 @@ class ParentProfileAdmin(admin.ModelAdmin):
 
         super().save_model(request, obj, form, change)
 
-        # Ensure a staff User exists for parent with correct perms to view their profile/assignments
-        if obj.parent_email:
-            user, created = User.objects.get_or_create(
-                email=obj.parent_email,
-                defaults={"is_active": True, "is_staff": True},
-            )
-            role_parent = Role.objects.filter(name__iexact="parent").first()
-            if role_parent:
-                user.role = role_parent
-            try:
-                view_parent_perm = Permission.objects.get(codename="view_parentprofile")
-                view_assignment_perm = Permission.objects.get(codename="view_assignment")
-                user.user_permissions.add(view_parent_perm, view_assignment_perm)
-            except Permission.DoesNotExist:
-                pass
-            user.is_staff = True
-            user.is_active = True
-            user.save()
+        # Note: User creation is now handled by signal in models.py
 
 
 # ===========================
