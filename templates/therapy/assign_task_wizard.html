@@ -396,16 +396,6 @@
                 <div class="step-panel" id="step-4">
                     <p class="step-description">Choose the specific tasks to assign to the client. You can select multiple tasks.</p>
                     
-                    <div class="child-selector">
-                        <label for="child-select">Select Child:</label>
-                        <select id="child-select" required>
-                            <option value="">Choose a child...</option>
-                            {% for child in children %}
-                                <option value="{{ child.id }}">{{ child.name }} (Age: {{ child.age }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
                     <div class="loading" id="tasks-loading">Please select a short-term goal first...</div>
                     <div class="task-grid" id="tasks-list" style="display: none;"></div>
                 </div>
@@ -424,7 +414,6 @@
     <script>
         let currentStep = 1;
         let selectedData = {
-            child_id: null,
             speech_area_id: null,
             long_term_goal_id: null,
             short_term_goal_id: null,
@@ -438,12 +427,6 @@
         });
 
         function setupEventListeners() {
-            // Child selection
-            document.getElementById('child-select').addEventListener('change', function() {
-                selectedData.child_id = this.value;
-                updateNextButton();
-            });
-
             // Speech area selection
             document.getElementById('speech-areas').addEventListener('click', function(e) {
                 const card = e.target.closest('.option-card');
@@ -605,7 +588,7 @@
                     canProceed = selectedData.short_term_goal_id;
                     break;
                 case 4:
-                    canProceed = selectedData.child_id && selectedData.selected_tasks.length > 0;
+                    canProceed = selectedData.selected_tasks.length > 0;
                     break;
             }
 
@@ -723,7 +706,6 @@
                     },
                     body: JSON.stringify({
                         parent_id: {{ parent.id }},
-                        child_id: selectedData.child_id,
                         selected_tasks: selectedData.selected_tasks
                     })
                 });

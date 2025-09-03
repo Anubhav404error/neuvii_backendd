@@ -99,14 +99,17 @@ def assign_tasks(request):
     try:
         data = json.loads(request.body)
         parent_id = data.get('parent_id')
-        child_id = data.get('child_id')
         selected_tasks = data.get('selected_tasks', [])
         
-        if not all([parent_id, child_id, selected_tasks]):
+        if not all([parent_id, selected_tasks]):
             return JsonResponse({'success': False, 'error': 'Missing required data'})
         
         parent = get_object_or_404(ParentProfile, id=parent_id)
-        child = get_object_or_404(Child, id=child_id, parent=parent)
+        
+        # Get the first child for this parent (or you can modify this logic)
+        child = parent.children.first()
+        if not child:
+            return JsonResponse({'success': False, 'error': 'No child found for this parent'})
         
         # Get therapist
         therapist = TherapistProfile.objects.filter(email=request.user.email).first()
