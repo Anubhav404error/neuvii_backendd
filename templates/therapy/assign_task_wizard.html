@@ -328,6 +328,156 @@
             margin-bottom: 1.5rem;
             line-height: 1.5;
         }
+
+        .add-new-section {
+            margin-bottom: 1.5rem;
+            text-align: right;
+        }
+
+        .btn-add-new {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-new:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .modal-title {
+            color: #2c8aa6;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2c8aa6;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-save {
+            background-color: #2c8aa6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-save:hover {
+            background-color: #236b85;
+        }
     </style>
 </head>
 <body>
@@ -366,6 +516,9 @@
                 <!-- Step 1: Speech Area -->
                 <div class="step-panel active" id="step-1">
                     <p class="step-description">Select the speech area you want to focus on for this client.</p>
+                    <div class="add-new-section">
+                        <button type="button" class="btn-add-new" onclick="showAddSpeechAreaModal()">+ Add New Speech Area</button>
+                    </div>
                     <div class="options-grid" id="speech-areas">
                         {% for area in speech_areas %}
                             <div class="option-card" data-id="{{ area.id }}">
@@ -381,6 +534,9 @@
                 <!-- Step 2: Long-Term Goal -->
                 <div class="step-panel" id="step-2">
                     <p class="step-description">Choose the long-term goal that aligns with your therapy objectives.</p>
+                    <div class="add-new-section">
+                        <button type="button" class="btn-add-new" onclick="showAddLongTermGoalModal()">+ Add New Long-Term Goal</button>
+                    </div>
                     <div class="loading" id="long-term-loading">Please select a speech area first...</div>
                     <div class="options-grid" id="long-term-goals" style="display: none;"></div>
                 </div>
@@ -388,6 +544,9 @@
                 <!-- Step 3: Short-Term Goal -->
                 <div class="step-panel" id="step-3">
                     <p class="step-description">Select the specific short-term goals to work towards.</p>
+                    <div class="add-new-section">
+                        <button type="button" class="btn-add-new" onclick="showAddShortTermGoalModal()">+ Add New Short-Term Goal</button>
+                    </div>
                     <div class="loading" id="short-term-loading">Please select a long-term goal first...</div>
                     <div class="options-grid" id="short-term-goals" style="display: none;"></div>
                 </div>
@@ -395,6 +554,9 @@
                 <!-- Step 4: Assign Tasks -->
                 <div class="step-panel" id="step-4">
                     <p class="step-description">Choose the specific tasks to assign to the client. You can select multiple tasks.</p>
+                    <div class="add-new-section">
+                        <button type="button" class="btn-add-new" onclick="showAddTaskModal()">+ Add New Task</button>
+                    </div>
                     
                     <div class="loading" id="tasks-loading">Please select a short-term goal first...</div>
                     <div class="task-grid" id="tasks-list" style="display: none;"></div>
@@ -408,6 +570,111 @@
                 </div>
                 <button class="btn btn-primary" id="next-btn" disabled>Next →</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding new speech area -->
+    <div class="modal-overlay" id="speech-area-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Speech Area</h3>
+                <button class="close-btn" onclick="closeModal('speech-area-modal')">&times;</button>
+            </div>
+            <form id="speech-area-form">
+                <div class="form-group">
+                    <label for="speech-area-name">Name *</label>
+                    <input type="text" id="speech-area-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="speech-area-description">Description</label>
+                    <textarea id="speech-area-description" name="description" placeholder="Optional description of this speech area"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('speech-area-modal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Speech Area</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for adding new long-term goal -->
+    <div class="modal-overlay" id="long-term-goal-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Long-Term Goal</h3>
+                <button class="close-btn" onclick="closeModal('long-term-goal-modal')">&times;</button>
+            </div>
+            <form id="long-term-goal-form">
+                <div class="form-group">
+                    <label for="long-term-goal-title">Goal Title *</label>
+                    <input type="text" id="long-term-goal-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="long-term-goal-description">Description</label>
+                    <textarea id="long-term-goal-description" name="description" placeholder="Optional description of this goal"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('long-term-goal-modal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Long-Term Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for adding new short-term goal -->
+    <div class="modal-overlay" id="short-term-goal-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Short-Term Goal</h3>
+                <button class="close-btn" onclick="closeModal('short-term-goal-modal')">&times;</button>
+            </div>
+            <form id="short-term-goal-form">
+                <div class="form-group">
+                    <label for="short-term-goal-title">Goal Title *</label>
+                    <input type="text" id="short-term-goal-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="short-term-goal-description">Description</label>
+                    <textarea id="short-term-goal-description" name="description" placeholder="Optional description of this goal"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('short-term-goal-modal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Short-Term Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for adding new task -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Task</h3>
+                <button class="close-btn" onclick="closeModal('task-modal')">&times;</button>
+            </div>
+            <form id="task-form">
+                <div class="form-group">
+                    <label for="task-title">Task Title *</label>
+                    <input type="text" id="task-title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" name="description" placeholder="Optional description of this task"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-difficulty">Difficulty Level *</label>
+                    <select id="task-difficulty" name="difficulty" required>
+                        <option value="">Select difficulty</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal('task-modal')">Cancel</button>
+                    <button type="submit" class="btn-save">Save Task</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -793,6 +1060,191 @@
                 window.location.href = '/admin/therapy/parentprofile/';
             };
         }
+
+        // Modal functions
+        function showAddSpeechAreaModal() {
+            document.getElementById('speech-area-modal').style.display = 'flex';
+        }
+
+        function showAddLongTermGoalModal() {
+            if (!selectedData.speech_area_id) {
+                alert('Please select a speech area first.');
+                return;
+            }
+            document.getElementById('long-term-goal-modal').style.display = 'flex';
+        }
+
+        function showAddShortTermGoalModal() {
+            if (!selectedData.long_term_goal_id) {
+                alert('Please select a long-term goal first.');
+                return;
+            }
+            document.getElementById('short-term-goal-modal').style.display = 'flex';
+        }
+
+        function showAddTaskModal() {
+            if (!selectedData.short_term_goal_id) {
+                alert('Please select a short-term goal first.');
+                return;
+            }
+            document.getElementById('task-modal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            // Reset form
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) {
+                form.reset();
+            }
+        }
+
+        // Form submission handlers
+        document.getElementById('speech-area-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/therapy/api/create-speech-area/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('speech-area-modal');
+                    // Refresh speech areas
+                    await refreshSpeechAreas();
+                    alert('Speech area created successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating speech area:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        document.getElementById('long-term-goal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('speech_area_id', selectedData.speech_area_id);
+            
+            try {
+                const response = await fetch('/therapy/api/create-long-term-goal/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('long-term-goal-modal');
+                    // Refresh long-term goals
+                    await loadLongTermGoals();
+                    alert('Long-term goal created successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating long-term goal:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        document.getElementById('short-term-goal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('long_term_goal_id', selectedData.long_term_goal_id);
+            
+            try {
+                const response = await fetch('/therapy/api/create-short-term-goal/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('short-term-goal-modal');
+                    // Refresh short-term goals
+                    await loadShortTermGoals();
+                    alert('Short-term goal created successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating short-term goal:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        document.getElementById('task-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            formData.append('short_term_goal_id', selectedData.short_term_goal_id);
+            
+            try {
+                const response = await fetch('/therapy/api/create-task/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('task-modal');
+                    // Refresh tasks
+                    await loadTasks();
+                    alert('Task created successfully!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        // Function to refresh speech areas
+        async function refreshSpeechAreas() {
+            try {
+                const response = await fetch('/therapy/api/speech-areas/');
+                const data = await response.json();
+                
+                const container = document.getElementById('speech-areas');
+                container.innerHTML = '';
+                
+                data.speech_areas.forEach(area => {
+                    const card = document.createElement('div');
+                    card.className = 'option-card';
+                    card.dataset.id = area.id;
+                    card.innerHTML = `
+                        <div class="option-title">${area.name}</div>
+                        ${area.description ? `<div class="option-description">${area.description}</div>` : ''}
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error refreshing speech areas:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

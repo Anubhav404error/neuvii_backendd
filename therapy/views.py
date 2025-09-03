@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.urls import reverse
 from django.utils.http import urlencode
 from .models import (
@@ -140,6 +140,164 @@ def assign_tasks(request):
             'message': f'{assignments_created} tasks assigned successfully to {child_name}',
             'child_name': child_name,
             'redirect_url': '/admin/therapy/parentprofile/'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_speech_areas(request):
+    """AJAX endpoint to get all active speech areas"""
+    speech_areas = SpeechArea.objects.filter(is_active=True).values('id', 'name', 'description')
+    return JsonResponse({'speech_areas': list(speech_areas)})
+
+
+@login_required
+@require_POST
+def create_speech_area(request):
+    """Create a new speech area"""
+    try:
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'error': 'Name is required'})
+        
+        # Check if speech area already exists
+        if SpeechArea.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'success': False, 'error': 'Speech area with this name already exists'})
+        
+        speech_area = SpeechArea.objects.create(
+            name=name,
+            description=description if description else None
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'speech_area': {
+                'id': speech_area.id,
+                'name': speech_area.name,
+                'description': speech_area.description
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def create_long_term_goal(request):
+    """Create a new long-term goal"""
+    try:
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        speech_area_id = request.POST.get('speech_area_id')
+        
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Title is required'})
+        
+        if not speech_area_id:
+            return JsonResponse({'success': False, 'error': 'Speech area is required'})
+        
+        speech_area = get_object_or_404(SpeechArea, id=speech_area_id)
+        
+        long_term_goal = LongTermGoal.objects.create(
+            speech_area=speech_area,
+            title=title,
+            description=description if description else None
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'goal': {
+                'id': long_term_goal.id,
+                'title': long_term_goal.title,
+                'description': long_term_goal.description
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def create_short_term_goal(request):
+    """Create a new short-term goal"""
+    try:
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        long_term_goal_id = request.POST.get('long_term_goal_id')
+        
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Title is required'})
+        
+        if not long_term_goal_id:
+            return JsonResponse({'success': False, 'error': 'Long-term goal is required'})
+        
+        long_term_goal = get_object_or_404(LongTermGoal, id=long_term_goal_id)
+        
+        short_term_goal = ShortTermGoal.objects.create(
+            long_term_goal=long_term_goal,
+            title=title,
+            description=description if description else None
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'goal': {
+                'id': short_term_goal.id,
+                'title': short_term_goal.title,
+                'description': short_term_goal.description
+            }
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_POST
+def create_task(request):
+    """Create a new task"""
+    try:
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        difficulty = request.POST.get('difficulty', '').strip()
+        short_term_goal_id = request.POST.get('short_term_goal_id')
+        
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Title is required'})
+        
+        if not difficulty:
+            return JsonResponse({'success': False, 'error': 'Difficulty is required'})
+        
+        if not short_term_goal_id:
+            return JsonResponse({'success': False, 'error': 'Short-term goal is required'})
+        
+        if difficulty not in ['beginner', 'intermediate', 'advanced']:
+            return JsonResponse({'success': False, 'error': 'Invalid difficulty level'})
+        
+        short_term_goal = get_object_or_404(ShortTermGoal, id=short_term_goal_id)
+        
+        task = Task.objects.create(
+            short_term_goal=short_term_goal,
+            title=title,
+            description=description if description else None,
+            difficulty=difficulty
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'task': {
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'difficulty': task.difficulty
+            }
         })
         
     except Exception as e:
