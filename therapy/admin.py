@@ -172,6 +172,16 @@ class ParentProfileAdmin(admin.ModelAdmin):
     list_filter = ["clinic", "fscd_approval", "is_active"]
     readonly_fields = ["date_added"]
 
+    def changelist_view(self, request, extra_context=None):
+        """Add custom context for the changelist view"""
+        extra_context = extra_context or {}
+        
+        # Check if user is therapist to show assign tasks button
+        role = _role_name(request.user)
+        extra_context['show_assign_tasks_button'] = role == 'therapist'
+        
+        return super().changelist_view(request, extra_context=extra_context)
+
     # “Add Tasks” button on the changelist (rightmost column)
     def add_tasks_button(self, obj):
         url = reverse("assign_task_wizard") + "?" + urlencode({"parent_id": obj.pk})

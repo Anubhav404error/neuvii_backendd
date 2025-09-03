@@ -16,7 +16,7 @@ import json
 def assign_task_wizard(request):
     """Multi-step task assignment wizard for therapists"""
     parent_id = request.GET.get('parent_id')
-    if not parent_id:
+    if not parent_id or parent_id == 'all':
         messages.error(request, 'Parent ID is required')
         return redirect('/admin/therapy/parentprofile/')
     
@@ -31,8 +31,20 @@ def assign_task_wizard(request):
                 messages.error(request, 'You do not have permission to assign tasks to this client')
                 return redirect('/admin/therapy/parentprofile/')
     
-    # Get children for this parent
+    # Get or create child for this parent
     children = parent.children.all()
+    if not children.exists():
+        # Auto-create child from parent profile
+        child = Child.objects.create(
+            name=f"{parent.first_name} {parent.last_name}",
+            age=parent.age or 5,  # Default age if not specified
+            gender='other',  # Default gender
+            clinic=parent.clinic,
+            parent=parent,
+            assigned_therapist=parent.assigned_therapist
+        )
+        children = [child]
+    
     speech_areas = SpeechArea.objects.filter(is_active=True)
     
     context = {
@@ -106,10 +118,18 @@ def assign_tasks(request):
         
         parent = get_object_or_404(ParentProfile, id=parent_id)
         
-        # Get the first child for this parent (or you can modify this logic)
+        # Get or create child for this parent
         child = parent.children.first()
         if not child:
-            return JsonResponse({'success': False, 'error': 'No child found for this parent'})
+            # Auto-create child from parent profile
+            child = Child.objects.create(
+                name=f"{parent.first_name} {parent.last_name}",
+                age=parent.age or 5,  # Default age if not specified
+                gender='other',  # Default gender
+                clinic=parent.clinic,
+                parent=parent,
+                assigned_therapist=parent.assigned_therapist
+            )
         
         # Get therapist
         therapist = TherapistProfile.objects.filter(email=request.user.email).first()

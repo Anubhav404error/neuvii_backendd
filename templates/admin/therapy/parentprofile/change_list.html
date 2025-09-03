@@ -1,0 +1,52 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block content_title %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>{{ title }}</h1>
+        {% if show_assign_tasks_button %}
+            <div>
+                <a href="{% url 'assign_task_wizard' %}?parent_id=all" 
+                   class="button default" 
+                   style="background-color: #2c8aa6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-left: 10px;">
+                    📋 Assign Tasks to Client
+                </a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block result_list %}
+    {{ block.super }}
+    
+    {% if show_assign_tasks_button %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Add click handler for the top assign tasks button
+                const assignButton = document.querySelector('a[href*="parent_id=all"]');
+                if (assignButton) {
+                    assignButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Get selected clients
+                        const selectedCheckboxes = document.querySelectorAll('input[name="_selected_action"]:checked');
+                        
+                        if (selectedCheckboxes.length === 0) {
+                            alert('Please select at least one client to assign tasks to.');
+                            return;
+                        }
+                        
+                        if (selectedCheckboxes.length > 1) {
+                            alert('Please select only one client at a time for task assignment.');
+                            return;
+                        }
+                        
+                        // Get the selected client ID
+                        const clientId = selectedCheckboxes[0].value;
+                        window.location.href = `{% url 'assign_task_wizard' %}?parent_id=${clientId}`;
+                    });
+                }
+            });
+        </script>
+    {% endif %}
+{% endblock %}

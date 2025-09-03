@@ -527,6 +527,10 @@
                                     <div class="option-description">{{ area.description }}</div>
                                 {% endif %}
                             </div>
+                        {% empty %}
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #6c757d;">
+                                <p>No speech areas available. Click "Add New Speech Area" to create one.</p>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>
